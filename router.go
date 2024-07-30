@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gorilla/websocket"
 	"github.com/vedadiyan/gtw/internal/structutil"
 )
 
@@ -209,6 +210,11 @@ func (r *Reader) Unmarshal(v any) error {
 		return err
 	}
 	return json.Unmarshal(data, v)
+}
+
+func (httpCtx *HttpCtx) Upgrade(headers http.Header) (*websocket.Conn, error) {
+	var upgrader websocket.Upgrader
+	return upgrader.Upgrade(httpCtx.Response, (*http.Request)(httpCtx.Request.Reader), headers)
 }
 
 func WithHeader(r func(status int, w http.ResponseWriter), h http.Header) func(status int, w http.ResponseWriter) {
