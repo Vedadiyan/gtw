@@ -212,9 +212,9 @@ func (r *Reader) Unmarshal(v any) error {
 	return json.Unmarshal(data, v)
 }
 
-func WithHeader(r func(w http.ResponseWriter), h func(w http.ResponseWriter)) func(w http.ResponseWriter) {
+func WithHeader(r func(w http.ResponseWriter), h http.Header) func(w http.ResponseWriter) {
 	return func(w http.ResponseWriter) {
-		h(w)
+		Header(h)(w)
 		r(w)
 	}
 }

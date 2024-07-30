@@ -19,9 +19,9 @@ func (t *TestAPI) GetHandler(httpCtx *HttpCtx) (Status, Response) {
 	output := map[string]any{
 		"Hello": t.Test.Value(),
 	}
-	heders := http.Header{}
-	heders.Add("x-test", "ok")
-	return 200, WithHeader(JSON(output), Header(heders))
+	headers := http.Header{}
+	headers.Add("x-test", "ok")
+	return 200, WithHeader(JSON(output), headers)
 }
 
 func TestParse(t *testing.T) {
