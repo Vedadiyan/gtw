@@ -51,6 +51,10 @@ const (
 	NO_URL_REGISTERED RouterError = "no url registered"
 )
 
+var (
+	_upgrader websocket.Upgrader
+)
+
 func NewRouteTable() *RouteTable {
 	routeTable := RouteTable{
 		routes:  map[int][]*Route{},
@@ -213,8 +217,7 @@ func (r *Reader) Unmarshal(v any) error {
 }
 
 func (httpCtx *HttpCtx) Upgrade(headers http.Header) (*websocket.Conn, error) {
-	var upgrader websocket.Upgrader
-	return upgrader.Upgrade(httpCtx.Response, (*http.Request)(httpCtx.Request.Reader), headers)
+	return _upgrader.Upgrade(httpCtx.Response, (*http.Request)(httpCtx.Request.Reader), headers)
 }
 
 func WithHeader(r func(status int, w http.ResponseWriter), h http.Header) func(status int, w http.ResponseWriter) {
