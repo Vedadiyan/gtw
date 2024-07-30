@@ -88,7 +88,7 @@ func (srv *Server) Register(v any) error {
 		return fmt.Errorf("expected struct but found %T", v)
 	}
 	val := reflect.ValueOf(v)
-	handlerType := reflect.TypeOf(func(*HttpCtx) (int, any) { return 0, nil })
+	handlerType := reflect.TypeOf(func(*HttpCtx) (Status, Response) { return 0, nil })
 	metadataType := reflect.TypeOf(Metadata(0))
 	lenOfFields := t.Elem().NumField()
 	prefix := ""
@@ -106,7 +106,7 @@ func (srv *Server) Register(v any) error {
 			if !ok {
 				continue
 			}
-			method := val.MethodByName(methodName).Interface().(func(*HttpCtx) (int, any))
+			method := val.MethodByName(methodName).Interface().(func(*HttpCtx) (Status, Response))
 			srv.Handle(fmt.Sprintf("/%s/%s", strings.TrimSuffix(prefix, "/"), strings.TrimPrefix(route, "/")), httpMethod, method)
 			continue
 		}

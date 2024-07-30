@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,15 +16,12 @@ import (
 type (
 	Metadata    byte
 	Status      = int
-	Response    = any
+	Response    func(http.ResponseWriter)
 	RouteValues map[string]any
 	RouterError string
-	Writer      struct {
-		http.ResponseWriter
-	}
-	Reader  http.Request
-	HttpCtx struct {
-		Response Writer
+	Reader      http.Request
+	HttpCtx     struct {
+		Response http.ResponseWriter
 		Request  struct {
 			*Reader
 			RouteValues RouteValues
@@ -47,8 +43,6 @@ type (
 		routeParams map[int]string
 		hash        string
 	}
-	TERM byte
-	JSON any
 )
 
 const (
@@ -186,7 +180,7 @@ func (rt RouteTable) Find(url *url.URL, method string) (http.HandlerFunc, error)
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		httpCtx := &HttpCtx{
-			Response: Writer{ResponseWriter: w},
+			Response: w,
 			Request: struct {
 				*Reader
 				RouteValues RouteValues
@@ -196,25 +190,8 @@ func (rt RouteTable) Find(url *url.URL, method string) (http.HandlerFunc, error)
 			},
 		}
 		status, value := rt.GetHandlerFunc(lrt.hash)(httpCtx)
-		switch value.(type) {
-		case JSON:
-			{
-				json, _err := json.Marshal(value)
-				if _err != nil {
-					http.Error(w, _err.Error(), http.StatusInternalServerError)
-					return
-				}
-				w.Header().Add("Content-Type", "application/json")
-				w.WriteHeader(status)
-				w.Write(json)
-			}
-		default:
-			{
-				w.Header().Add("Content-Type", "text/plain")
-				w.WriteHeader(status)
-				w.Write([]byte(fmt.Sprintf("%v", value)))
-			}
-		}
+		value(w)
+		w.WriteHeader(status)
 
 	}, nil
 }
@@ -227,23 +204,28 @@ func (rv RouteValues) Unmarshal(v any) error {
 	return structutil.Unmarshal(rv, v)
 }
 
-func (w Writer) JSON(v any) error {
-	w.Header().Add("Content-Type", "application/json")
-	data, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *Reader) Unmarshal(v any) error {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(data, v)
+}
+
+func JSON(v any) func(w http.ResponseWriter) {
+	return func(w http.ResponseWriter) {
+		json, _err := json.Marshal(v)
+		if _err != nil {
+			http.Error(w, _err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(json)
+	}
+}
+
+func Raw(data []byte) func(w http.ResponseWriter) {
+	return func(w http.ResponseWriter) {
+		w.Write(data)
+	}
 }
