@@ -25,6 +25,14 @@ type (
 	}
 )
 
+var (
+	_defaultServer *Server
+)
+
+func init() {
+	_defaultServer = New()
+}
+
 func AddSingleton[T any](fn func() (instance *T, err error)) {
 	di.AddSinleton[T](fn)
 }
@@ -47,6 +55,10 @@ func AddScoped[T any](fn func() (instance *T, err error)) {
 
 func AddScopedWithName[T any](name string, fn func() (instance *T, err error)) {
 	di.AddScopedWithName[T](name, fn)
+}
+
+func DefaultServer() *Server {
+	return _defaultServer
 }
 
 func New() *Server {
