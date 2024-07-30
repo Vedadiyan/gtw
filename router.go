@@ -212,6 +212,21 @@ func (r *Reader) Unmarshal(v any) error {
 	return json.Unmarshal(data, v)
 }
 
+func WithHeader(r func(w http.ResponseWriter), h func(w http.ResponseWriter)) func(w http.ResponseWriter) {
+	return func(w http.ResponseWriter) {
+		h(w)
+		r(w)
+	}
+}
+
+func Header(headers http.Header) func(w http.ResponseWriter) {
+	return func(w http.ResponseWriter) {
+		for key := range headers {
+			w.Header().Add(key, headers.Get(key))
+		}
+	}
+}
+
 func JSON(v any) func(w http.ResponseWriter) {
 	return func(w http.ResponseWriter) {
 		json, _err := json.Marshal(v)
@@ -227,5 +242,11 @@ func JSON(v any) func(w http.ResponseWriter) {
 func Raw(data []byte) func(w http.ResponseWriter) {
 	return func(w http.ResponseWriter) {
 		w.Write(data)
+	}
+}
+
+func Empty() func(w http.ResponseWriter) {
+	return func(w http.ResponseWriter) {
+
 	}
 }

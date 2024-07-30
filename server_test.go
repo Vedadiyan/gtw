@@ -1,6 +1,7 @@
 package gtw
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/vedadiyan/gtw/internal/di"
@@ -15,9 +16,12 @@ type (
 )
 
 func (t *TestAPI) GetHandler(httpCtx *HttpCtx) (Status, Response) {
-	return 200, JSON(map[string]any{
+	output := map[string]any{
 		"Hello": t.Test.Value(),
-	})
+	}
+	heders := http.Header{}
+	heders.Add("x-test", "ok")
+	return 200, WithHeader(JSON(output), Header(heders))
 }
 
 func TestParse(t *testing.T) {
