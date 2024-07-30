@@ -10,8 +10,10 @@ import (
 type (
 	TestAPI struct {
 		Metadata `prefix:"api"`
-		Test     Service[int] `name:"test"`
-		Get      Handler      `route:"/test/:name" method:"GET"`
+
+		Test Service[int] `name:"test"`
+
+		Get Handler `route:"/test/:name" method:"GET"`
 	}
 )
 

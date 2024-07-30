@@ -91,7 +91,7 @@ func (srv *Server) Register(v any) error {
 	handlerType := reflect.TypeOf(func(*HttpCtx) (Status, Response) { return 0, nil })
 	metadataType := reflect.TypeOf(Metadata(0))
 	lenOfFields := t.Elem().NumField()
-	prefix := ""
+	prefix := t.Elem().Name()
 	for i := 0; i < lenOfFields; i++ {
 		field := t.Elem().Field(i)
 		if field.Name == "Metadata" && field.Type.AssignableTo(metadataType) {
@@ -99,10 +99,16 @@ func (srv *Server) Register(v any) error {
 			continue
 		}
 		if field.Type.AssignableTo(handlerType) {
-			route := field.Tag.Get("route")
-			httpMethod := field.Tag.Get("method")
+			route, ok := field.Tag.Lookup("route")
+			if !ok {
+				route = field.Name
+			}
+			httpMethod, ok := field.Tag.Lookup("method")
+			if !ok {
+				httpMethod = "GET"
+			}
 			methodName := fmt.Sprintf("%sHandler", field.Name)
-			_, ok := t.MethodByName(methodName)
+			_, ok = t.MethodByName(methodName)
 			if !ok {
 				continue
 			}
