@@ -16,7 +16,7 @@ import (
 type (
 	Metadata    byte
 	Status      = int
-	Response    func(http.ResponseWriter)
+	Response    func(int, http.ResponseWriter)
 	RouteValues map[string]any
 	RouterError string
 	Reader      http.Request
@@ -31,10 +31,10 @@ type (
 		Status  int
 		Message any
 	}
-	HandlerFunc func(*HttpCtx) (Status, Response)
-	RouteTable  struct {
+	Handler    func(*HttpCtx) (Status, Response)
+	RouteTable struct {
 		routes  map[int][]*Route
-		configs map[string]HandlerFunc
+		configs map[string]Handler
 	}
 	Route struct {
 		path        string
@@ -48,12 +48,14 @@ type (
 const (
 	NO_MATCH_FOUND    RouterError = "no match found"
 	NO_URL_REGISTERED RouterError = "no url registered"
+
+	HDR_SKIP = -1
 )
 
 func NewRouteTable() *RouteTable {
 	routeTable := RouteTable{
 		routes:  map[int][]*Route{},
-		configs: make(map[string]HandlerFunc),
+		configs: make(map[string]Handler),
 	}
 	return &routeTable
 }
@@ -138,7 +140,7 @@ func CreateHash(url *url.URL, method string) string {
 	return hash
 }
 
-func (rt *RouteTable) Register(url *url.URL, method string, handlerFunc HandlerFunc) {
+func (rt *RouteTable) Register(url *url.URL, method string, handlerFunc Handler) {
 	route := ParseRoute(url, method)
 	len := len(route.routeValues)
 	if _, ok := rt.configs[route.hash]; ok {
@@ -190,13 +192,12 @@ func (rt RouteTable) Find(url *url.URL, method string) (http.HandlerFunc, error)
 			},
 		}
 		status, value := rt.GetHandlerFunc(lrt.hash)(httpCtx)
-		value(w)
-		w.WriteHeader(status)
+		value(status, w)
 
 	}, nil
 }
 
-func (rt RouteTable) GetHandlerFunc(hash string) HandlerFunc {
+func (rt RouteTable) GetHandlerFunc(hash string) Handler {
 	return rt.configs[hash]
 }
 
@@ -212,41 +213,50 @@ func (r *Reader) Unmarshal(v any) error {
 	return json.Unmarshal(data, v)
 }
 
-func WithHeader(r func(w http.ResponseWriter), h http.Header) func(w http.ResponseWriter) {
-	return func(w http.ResponseWriter) {
-		Header(h)(w)
-		r(w)
+func WithHeader(r func(status int, w http.ResponseWriter), h http.Header) func(status int, w http.ResponseWriter) {
+	return func(status int, w http.ResponseWriter) {
+		Header(h)(status, w)
+		r(HDR_SKIP, w)
 	}
 }
 
-func Header(headers http.Header) func(w http.ResponseWriter) {
-	return func(w http.ResponseWriter) {
+func Header(headers http.Header) func(status int, w http.ResponseWriter) {
+	return func(status int, w http.ResponseWriter) {
 		for key := range headers {
 			w.Header().Add(key, headers.Get(key))
+			w.WriteHeader(status)
 		}
 	}
 }
 
-func JSON(v any) func(w http.ResponseWriter) {
-	return func(w http.ResponseWriter) {
+func JSON(v any) func(status int, w http.ResponseWriter) {
+	return func(status int, w http.ResponseWriter) {
 		json, _err := json.Marshal(v)
 		if _err != nil {
 			http.Error(w, _err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Header().Add("Content-Type", "application/json")
+		if status != HDR_SKIP {
+			w.WriteHeader(status)
+		}
 		w.Write(json)
 	}
 }
 
-func Raw(data []byte) func(w http.ResponseWriter) {
-	return func(w http.ResponseWriter) {
+func Raw(data []byte) func(status int, w http.ResponseWriter) {
+	return func(status int, w http.ResponseWriter) {
+		if status != HDR_SKIP {
+			w.WriteHeader(status)
+		}
 		w.Write(data)
 	}
 }
 
-func Empty() func(w http.ResponseWriter) {
-	return func(w http.ResponseWriter) {
-
+func Empty() func(status int, w http.ResponseWriter) {
+	return func(status int, w http.ResponseWriter) {
+		if status != HDR_SKIP {
+			w.WriteHeader(status)
+		}
 	}
 }

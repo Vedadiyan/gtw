@@ -13,7 +13,7 @@ import (
 )
 
 type (
-	Inject[T any] struct {
+	Service[T any] struct {
 		name     string
 		hasScope bool
 		scopeId  uint64
@@ -65,7 +65,7 @@ func New() *Server {
 	return server
 }
 
-func (srv *Server) Handle(route string, method string, handlerFunc HandlerFunc) error {
+func (srv *Server) Handle(route string, method string, handlerFunc Handler) error {
 	url, err := url.Parse(route)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (srv *Server) Register(v any) error {
 			srv.Handle(fmt.Sprintf("/%s/%s", strings.TrimSuffix(prefix, "/"), strings.TrimPrefix(route, "/")), httpMethod, method)
 			continue
 		}
-		if strings.HasPrefix(field.Type.Name(), "Inject[") && field.Type.PkgPath() == "github.com/vedadiyan/gtw" {
+		if strings.HasPrefix(field.Type.Name(), "Service[") && field.Type.PkgPath() == "github.com/vedadiyan/gtw" {
 			rf := val.Elem().Field(i)
 			name, ok := field.Tag.Lookup("name")
 			if ok {
@@ -124,7 +124,7 @@ func (srv *Server) Register(v any) error {
 	return nil
 }
 
-func (i *Inject[T]) Value() *T {
+func (i *Service[T]) Value() *T {
 	var options *di.Options
 	if i.hasScope {
 		options = di.NewOptions(i.scopeId, i.ttl)
@@ -135,7 +135,7 @@ func (i *Inject[T]) Value() *T {
 	return di.ResolveWithNameOrPanic[T](i.name, options)
 }
 
-func (i *Inject[T]) Scope(scopeId uint64, ttl time.Duration) *Inject[T] {
+func (i *Service[T]) Scope(scopeId uint64, ttl time.Duration) *Service[T] {
 	copy := *i
 	copy.hasScope = true
 	copy.scopeId = scopeId

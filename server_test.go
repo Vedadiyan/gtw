@@ -10,8 +10,8 @@ import (
 type (
 	TestAPI struct {
 		Metadata `prefix:"api"`
-		Test     Inject[int] `name:"test"`
-		Get      HandlerFunc `route:"/test/:name" method:"GET"`
+		Test     Service[int] `name:"test"`
+		Get      Handler      `route:"/test/:name" method:"GET"`
 	}
 )
 
@@ -21,7 +21,7 @@ func (t *TestAPI) GetHandler(httpCtx *HttpCtx) (Status, Response) {
 	}
 	headers := http.Header{}
 	headers.Add("x-test", "ok")
-	return 200, WithHeader(JSON(output), headers)
+	return 201, WithHeader(JSON(output), headers)
 }
 
 func TestParse(t *testing.T) {
