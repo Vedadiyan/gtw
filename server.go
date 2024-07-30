@@ -81,6 +81,9 @@ func (srv *Server) ListenAndServe(server *http.Server) error {
 
 func (srv *Server) Register(v any) error {
 	t := reflect.TypeOf(v)
+	if t.Kind() != reflect.Pointer {
+		return fmt.Errorf("expected pointer buy found value")
+	}
 	if t.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("expected struct but found %T", v)
 	}
