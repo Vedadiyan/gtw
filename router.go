@@ -48,8 +48,6 @@ type (
 const (
 	NO_MATCH_FOUND    RouterError = "no match found"
 	NO_URL_REGISTERED RouterError = "no url registered"
-
-	HDR_SKIP = -1
 )
 
 func NewRouteTable() *RouteTable {
@@ -215,16 +213,15 @@ func (r *Reader) Unmarshal(v any) error {
 
 func WithHeader(r func(status int, w http.ResponseWriter), h http.Header) func(status int, w http.ResponseWriter) {
 	return func(status int, w http.ResponseWriter) {
-		Header(h)(status, w)
-		r(HDR_SKIP, w)
+		Header(h)(0, w)
+		r(status, w)
 	}
 }
 
-func Header(headers http.Header) func(status int, w http.ResponseWriter) {
-	return func(status int, w http.ResponseWriter) {
+func Header(headers http.Header) func(_ int, w http.ResponseWriter) {
+	return func(_ int, w http.ResponseWriter) {
 		for key := range headers {
 			w.Header().Add(key, headers.Get(key))
-			w.WriteHeader(status)
 		}
 	}
 }
@@ -237,26 +234,20 @@ func JSON(v any) func(status int, w http.ResponseWriter) {
 			return
 		}
 		w.Header().Add("Content-Type", "application/json")
-		if status != HDR_SKIP {
-			w.WriteHeader(status)
-		}
+		w.WriteHeader(status)
 		w.Write(json)
 	}
 }
 
 func Raw(data []byte) func(status int, w http.ResponseWriter) {
 	return func(status int, w http.ResponseWriter) {
-		if status != HDR_SKIP {
-			w.WriteHeader(status)
-		}
+		w.WriteHeader(status)
 		w.Write(data)
 	}
 }
 
 func Empty() func(status int, w http.ResponseWriter) {
 	return func(status int, w http.ResponseWriter) {
-		if status != HDR_SKIP {
-			w.WriteHeader(status)
-		}
+		w.WriteHeader(status)
 	}
 }
