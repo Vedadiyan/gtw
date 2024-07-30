@@ -74,11 +74,8 @@ func (srv *Server) Handle(route string, method string, handlerFunc Handler) erro
 	return nil
 }
 
-func (srv *Server) ListenAndServe(addr string) error {
-	server := http.Server{
-		Addr:    addr,
-		Handler: srv.mux,
-	}
+func (srv *Server) ListenAndServe(server *http.Server) error {
+	server.Handler = srv.mux
 	return server.ListenAndServe()
 }
 

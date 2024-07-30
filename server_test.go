@@ -36,5 +36,7 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	server.ListenAndServe(":8081")
+	server.ListenAndServe(&http.Server{
+		Addr: ":8080",
+	})
 }
