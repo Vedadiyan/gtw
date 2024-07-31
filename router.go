@@ -15,9 +15,8 @@ import (
 )
 
 type (
-	Metadata    byte
 	Status      = int
-	Response    func(int, http.ResponseWriter)
+	Metadata    byte
 	RouteValues map[string]any
 	RouterError string
 	Reader      http.Request
@@ -32,7 +31,6 @@ type (
 		Status  int
 		Message any
 	}
-	Handler    func(*HttpCtx) (Status, Response)
 	RouteTable struct {
 		routes  map[int][]*Route
 		configs map[string]Handler
@@ -44,6 +42,8 @@ type (
 		routeParams map[int]string
 		hash        string
 	}
+	Response func(int, http.ResponseWriter)
+	Handler  func(*HttpCtx) (Status, Response)
 )
 
 const (
