@@ -54,7 +54,7 @@ func (f *Foo) GetHandler(httpCtx *HttpCtx) (Status, Response) {
     output := map[string]any{
         "Hello": t.Bar.Value(),
     }
-    return 201, JSON(output)
+    return 200, JSON(output)
 }
 ```
 
