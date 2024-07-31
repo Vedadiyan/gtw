@@ -8,8 +8,6 @@
 4. [GTW vs. Fiber/Gin](#4-gtw-vs-fibergin)
 5. [Getting Started](#5-getting-started)
 6. [Features](#6-features)
-7. [Roadmap](#7-roadmap)
-8. [Contribution](#8-contribution)
 
 ## 1. Introduction
 
