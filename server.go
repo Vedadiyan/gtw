@@ -104,7 +104,6 @@ func (srv *Server) Register(v any) error {
 				f.Set(reflect.ValueOf(name))
 			}
 		}
-
 	}
 	return nil
 }
