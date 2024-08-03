@@ -47,7 +47,7 @@ func New() *Server {
 		w.WriteHeader(http.StatusNoContent)
 	}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodOptions {
+		if r.Method == http.MethodOptions {
 			server.corsHandler(w, r)
 			return
 		}
