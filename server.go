@@ -48,6 +48,11 @@ func New() *Server {
 	}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
+			_, err := server.routeTable.Find(r.URL, "*")
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
 			server.corsHandler(w, r)
 			return
 		}
