@@ -16,27 +16,27 @@ type (
 )
 
 func AddSingleton[T any](fn func() (instance *T, err error)) {
-	di.AddSinleton[T](fn)
+	di.AddSinleton(fn)
 }
 
 func AddSingletonWithName[T any](name string, fn func() (instance *T, err error)) {
-	di.AddSinletonWithName[T](name, fn)
+	di.AddSinletonWithName(name, fn)
 }
 
 func AddTransient[T any](fn func() (instance *T, err error)) {
-	di.AddTransient[T](fn)
+	di.AddTransient(fn)
 }
 
 func AddTransientWithName[T any](name string, fn func() (instance *T, err error)) {
-	di.AddTransientWithName[T](name, fn)
+	di.AddTransientWithName(name, fn)
 }
 
 func AddScoped[T any](fn func() (instance *T, err error)) {
-	di.AddScoped[T](fn)
+	di.AddScoped(fn)
 }
 
 func AddScopedWithName[T any](name string, fn func() (instance *T, err error)) {
-	di.AddScopedWithName[T](name, fn)
+	di.AddScopedWithName(name, fn)
 }
 
 func (i *Service[T]) Value() *T {
