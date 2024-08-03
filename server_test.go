@@ -36,7 +36,7 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	server.ListenAndServe(&http.Server{
+	server.Cors(CorsAllowAll()).ListenAndServe(&http.Server{
 		Addr: ":8080",
 	})
 }

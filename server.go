@@ -10,9 +10,18 @@ import (
 )
 
 type (
+	Cors struct {
+		AllowedOrigins string
+		AllowedMethods string
+		AllowedHeaders string
+		ExposedHeaders string
+		MaxAge         string
+	}
 	Server struct {
-		mux        *http.ServeMux
-		routeTable *RouteTable
+		mux                   *http.ServeMux
+		routeTable            *RouteTable
+		corsHandler           http.HandlerFunc
+		defaultResponseHeader http.Header
 	}
 )
 
@@ -33,11 +42,22 @@ func New() *Server {
 	server := new(Server)
 	server.mux = mux
 	server.routeTable = NewRouteTable()
+	server.defaultResponseHeader = http.Header{}
+	server.corsHandler = func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodOptions {
+			server.corsHandler(w, r)
+			return
+		}
 		route, err := server.routeTable.Find(r.URL, r.Method)
 		if err != nil {
 			http.NotFound(w, r)
 			return
+		}
+		for key := range server.defaultResponseHeader {
+			w.Header().Add(key, server.defaultResponseHeader.Get(key))
 		}
 		route.ServeHTTP(w, r)
 	})
@@ -106,4 +126,31 @@ func (srv *Server) Register(v any) error {
 		}
 	}
 	return nil
+}
+
+func (s *Server) Cors(c *Cors) *Server {
+	s.defaultResponseHeader.Add("Access-Control-Expose-Headers", c.ExposedHeaders)
+	s.corsHandler = func(w http.ResponseWriter, r *http.Request) {
+		_, err := s.routeTable.Find(r.URL, "*")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Add("access-control-allow-origin", c.AllowedOrigins)
+		w.Header().Add("access-control-allow-headers", c.AllowedHeaders)
+		w.Header().Add("access-control-max-age", c.MaxAge)
+		w.Header().Add("access-control-allow-methods", c.AllowedMethods)
+		w.WriteHeader(http.StatusNoContent)
+	}
+	return s
+}
+
+func CorsAllowAll() *Cors {
+	return &Cors{
+		AllowedOrigins: "*",
+		AllowedMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		AllowedHeaders: "*",
+		ExposedHeaders: "*",
+		MaxAge:         "3628800",
+	}
 }

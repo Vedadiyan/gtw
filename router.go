@@ -169,7 +169,7 @@ func (rt RouteTable) Find(url *url.URL, method string) (http.HandlerFunc, error)
 	lrnk := 0
 	var lrt *Route
 	for _, url := range routes {
-		if url.method != strings.ToUpper(method) {
+		if method != "*" && url.method != strings.ToUpper(method) {
 			continue
 		}
 		rnk := RouteCompare(url, prt)
