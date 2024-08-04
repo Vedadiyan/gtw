@@ -117,7 +117,9 @@ func (srv *Server) Register(v any) error {
 				continue
 			}
 			method := val.MethodByName(methodName).Interface().(func(*HttpCtx) (Status, Response))
-			srv.Handle(fmt.Sprintf("/%s/%s", strings.TrimSuffix(prefix, "/"), strings.TrimPrefix(route, "/")), httpMethod, method)
+			r := fmt.Sprintf("/%s/%s", strings.TrimSuffix(prefix, "/"), strings.TrimPrefix(route, "/"))
+			r = strings.TrimLeft(r, "/")
+			srv.Handle(fmt.Sprintf("/%s", r), httpMethod, method)
 			continue
 		}
 		if strings.HasPrefix(field.Type.Name(), "Service[") && field.Type.PkgPath() == "github.com/vedadiyan/gtw" {
