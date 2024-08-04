@@ -147,7 +147,7 @@ func (s *Server) Cors(c *Cors) *Server {
 		w.Header().Add("access-control-allow-headers", c.AllowedHeaders)
 		w.Header().Add("access-control-max-age", c.MaxAge)
 		w.Header().Add("access-control-allow-methods", c.AllowedMethods)
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusOK)
 	}
 	return s
 }
