@@ -55,6 +55,12 @@ var (
 	_upgrader websocket.Upgrader
 )
 
+func init() {
+	_upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+}
+
 func NewRouteTable() *RouteTable {
 	routeTable := RouteTable{
 		routes:  map[int][]*Route{},
